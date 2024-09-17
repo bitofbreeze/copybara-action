@@ -6283,6 +6283,8 @@ exports.copyBaraSky = (sotRepo, sotBranch, destinationRepo, destinationBranch, c
     const pushOriginFiles = pushInclude.map((glob, i) => `glob(['${glob}']${pushExclude[i] ? `, exclude = ['${pushExclude[i]}']` : ""})`).join(" + ");
     // origin_files = glob(PUSH_INCLUDE, exclude = PUSH_EXCLUDE),
     // destination_files = glob(PUSH_INCLUDE, exclude = PUSH_EXCLUDE),
+    // PUSH_INCLUDE = [${pushInclude}]
+    // PUSH_EXCLUDE = [${pushExclude}]
     const config = `
 # Variables
 SOT_REPO = "${sotRepo}"
@@ -6292,8 +6294,6 @@ DESTINATION_BRANCH = "${destinationBranch}"
 COMMITTER = "${committer}"
 LOCAL_SOT = "${localSot}"
 
-# PUSH_INCLUDE = [${pushInclude}]
-# PUSH_EXCLUDE = [${pushExclude}]
 PUSH_TRANSFORMATIONS = [${pushTransformations}
 ]
 
