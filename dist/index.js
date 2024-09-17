@@ -1979,52 +1979,6 @@ module.exports = {
 
 /***/ }),
 
-/***/ 62:
-/***/ (function(__unusedmodule, exports) {
-
-"use strict";
-
-
-Object.defineProperty(exports, '__esModule', { value: true });
-
-/*!
- * is-plain-object <https://github.com/jonschlinkert/is-plain-object>
- *
- * Copyright (c) 2014-2017, Jon Schlinkert.
- * Released under the MIT License.
- */
-
-function isObject(o) {
-  return Object.prototype.toString.call(o) === '[object Object]';
-}
-
-function isPlainObject(o) {
-  var ctor,prot;
-
-  if (isObject(o) === false) return false;
-
-  // If has modified constructor
-  ctor = o.constructor;
-  if (ctor === undefined) return true;
-
-  // If has modified prototype
-  prot = ctor.prototype;
-  if (isObject(prot) === false) return false;
-
-  // If constructor does not have an Object-specific method
-  if (prot.hasOwnProperty('isPrototypeOf') === false) {
-    return false;
-  }
-
-  // Most likely a plain Object
-  return true;
-}
-
-exports.isPlainObject = isPlainObject;
-
-
-/***/ }),
-
 /***/ 65:
 /***/ (function(module, __unusedexports, __webpack_require__) {
 
@@ -4227,7 +4181,7 @@ function _interopDefault (ex) { return (ex && (typeof ex === 'object') && 'defau
 
 var endpoint = __webpack_require__(440);
 var universalUserAgent = __webpack_require__(429);
-var isPlainObject = __webpack_require__(62);
+var isPlainObject = __webpack_require__(287);
 var nodeFetch = _interopDefault(__webpack_require__(467));
 var requestError = __webpack_require__(537);
 
@@ -5065,6 +5019,52 @@ function patch (fs) {
     return false
   }
 }
+
+
+/***/ }),
+
+/***/ 287:
+/***/ (function(__unusedmodule, exports) {
+
+"use strict";
+
+
+Object.defineProperty(exports, '__esModule', { value: true });
+
+/*!
+ * is-plain-object <https://github.com/jonschlinkert/is-plain-object>
+ *
+ * Copyright (c) 2014-2017, Jon Schlinkert.
+ * Released under the MIT License.
+ */
+
+function isObject(o) {
+  return Object.prototype.toString.call(o) === '[object Object]';
+}
+
+function isPlainObject(o) {
+  var ctor,prot;
+
+  if (isObject(o) === false) return false;
+
+  // If has modified constructor
+  ctor = o.constructor;
+  if (ctor === undefined) return true;
+
+  // If has modified prototype
+  prot = ctor.prototype;
+  if (isObject(prot) === false) return false;
+
+  // If constructor does not have an Object-specific method
+  if (prot.hasOwnProperty('isPrototypeOf') === false) {
+    return false;
+  }
+
+  // Most likely a plain Object
+  return true;
+}
+
+exports.isPlainObject = isPlainObject;
 
 
 /***/ }),
@@ -6278,7 +6278,11 @@ exports.getUserAgent = getUserAgent;
 
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.copyBaraSky = void 0;
-exports.copyBaraSky = (sotRepo, sotBranch, destinationRepo, destinationBranch, committer, localSot, pushInclude, pushExclude, pushTransformations, prInclude, prExclude, prTransformations) => `
+exports.copyBaraSky = (sotRepo, sotBranch, destinationRepo, destinationBranch, committer, localSot, pushInclude, pushExclude, pushTransformations, prInclude, prExclude, prTransformations) => {
+    // Support https://github.com/google/copybara/issues/297#issuecomment-2355678027
+    const pushOriginFiles = pushInclude.map((glob, i) => `glob(["${glob}"]${pushExclude[i] ? `, exclude = ["${pushExclude[i]}"]` : ""})`).join(" + ");
+    console.log({ pushOriginFiles });
+    return `
 # Variables
 SOT_REPO = "${sotRepo}"
 SOT_BRANCH = "${sotBranch}"
@@ -6287,8 +6291,8 @@ DESTINATION_BRANCH = "${destinationBranch}"
 COMMITTER = "${committer}"
 LOCAL_SOT = "${localSot}"
 
-PUSH_INCLUDE = [${pushInclude}]
-PUSH_EXCLUDE = [${pushExclude}]
+# PUSH_INCLUDE = [${pushInclude}]
+# PUSH_EXCLUDE = [${pushExclude}]
 PUSH_TRANSFORMATIONS = [${pushTransformations}
 ]
 
@@ -6308,7 +6312,8 @@ core.workflow(
         url = DESTINATION_REPO,
         push = DESTINATION_BRANCH,
     ),
-    origin_files = glob(PUSH_INCLUDE, exclude = PUSH_EXCLUDE),
+    # origin_files = glob(PUSH_INCLUDE, exclude = PUSH_EXCLUDE),
+    origin_files = ${pushOriginFiles},
     authoring = authoring.pass_thru(default = COMMITTER),
     mode = "ITERATIVE",
     transformations = [
@@ -6329,7 +6334,8 @@ core.workflow(
         destination_ref = SOT_BRANCH,
         integrates = [],
     ),
-    destination_files = glob(PUSH_INCLUDE, exclude = PUSH_EXCLUDE),
+    # destination_files = glob(PUSH_INCLUDE, exclude = PUSH_EXCLUDE),
+    destination_files = ${pushOriginFiles},
     origin_files = glob(PR_INCLUDE if PR_INCLUDE else ["**"], exclude = PR_EXCLUDE),
     authoring = authoring.pass_thru(default = COMMITTER),
     mode = "CHANGE_REQUEST",
@@ -6340,6 +6346,7 @@ core.workflow(
     ] + PR_TRANSFORMATIONS,
 )
 `;
+};
 
 
 /***/ }),
@@ -6692,7 +6699,7 @@ exports.getOctokit = getOctokit;
 
 Object.defineProperty(exports, '__esModule', { value: true });
 
-var isPlainObject = __webpack_require__(558);
+var isPlainObject = __webpack_require__(287);
 var universalUserAgent = __webpack_require__(429);
 
 function lowercaseKeys(object) {
@@ -9892,7 +9899,13 @@ class CopyBara {
     }
     static getConfig(workflow, config) {
         this.validateConfig(config, workflow);
-        return copy_bara_sky_1.copyBaraSky(`git@github.com:${config.sot.repo}.git`, config.sot.branch, `git@github.com:${config.destination.repo}.git`, config.destination.branch, config.committer, "file:///usr/src/app", this.generateInExcludes(config.push.include), this.generateInExcludes(config.push.exclude), this.generateTransformations(config.push.move, config.push.replace, "push"), this.generateInExcludes(config.pr.include), this.generateInExcludes(config.pr.exclude), this.generateTransformations(config.pr.move, config.pr.replace, "pr"));
+        return copy_bara_sky_1.copyBaraSky(`git@github.com:${config.sot.repo}.git`, config.sot.branch, `git@github.com:${config.destination.repo}.git`, config.destination.branch, config.committer, "file:///usr/src/app", config.push.include, config.push.exclude, 
+        // this.generateInExcludes(config.push.include),
+        // this.generateInExcludes(config.push.exclude),
+        this.generateTransformations(config.push.move, config.push.replace, "push"), config.pr.include, config.pr.exclude, 
+        // this.generateInExcludes(config.pr.include),
+        // this.generateInExcludes(config.pr.exclude),
+        this.generateTransformations(config.pr.move, config.pr.replace, "pr"));
     }
     exec(dockerParams = [], copybaraOptions = []) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -10421,52 +10434,6 @@ function addHook (state, kind, name, hook) {
     orig: orig
   })
 }
-
-
-/***/ }),
-
-/***/ 558:
-/***/ (function(__unusedmodule, exports) {
-
-"use strict";
-
-
-Object.defineProperty(exports, '__esModule', { value: true });
-
-/*!
- * is-plain-object <https://github.com/jonschlinkert/is-plain-object>
- *
- * Copyright (c) 2014-2017, Jon Schlinkert.
- * Released under the MIT License.
- */
-
-function isObject(o) {
-  return Object.prototype.toString.call(o) === '[object Object]';
-}
-
-function isPlainObject(o) {
-  var ctor,prot;
-
-  if (isObject(o) === false) return false;
-
-  // If has modified constructor
-  ctor = o.constructor;
-  if (ctor === undefined) return true;
-
-  // If has modified prototype
-  prot = ctor.prototype;
-  if (isObject(prot) === false) return false;
-
-  // If constructor does not have an Object-specific method
-  if (prot.hasOwnProperty('isPrototypeOf') === false) {
-    return false;
-  }
-
-  // Most likely a plain Object
-  return true;
-}
-
-exports.isPlainObject = isPlainObject;
 
 
 /***/ }),
@@ -15282,12 +15249,7 @@ rimraf.sync = rimrafSync
 var assert = __webpack_require__(357)
 var path = __webpack_require__(622)
 var fs = __webpack_require__(747)
-var glob = undefined
-try {
-  glob = __webpack_require__(957)
-} catch (_err) {
-  // treat glob as optional.
-}
+var glob = __webpack_require__(957)
 var _0666 = parseInt('666', 8)
 
 var defaultGlobOpts = {
@@ -15319,9 +15281,6 @@ function defaults (options) {
   options.emfileWait = options.emfileWait || 1000
   if (options.glob === false) {
     options.disableGlob = true
-  }
-  if (options.disableGlob !== true && glob === undefined) {
-    throw Error('glob dependency not found, set `options.disableGlob = true` if intentional')
   }
   options.disableGlob = options.disableGlob || false
   options.glob = options.glob || defaultGlobOpts

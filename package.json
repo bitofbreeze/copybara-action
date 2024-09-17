@@ -77,5 +77,8 @@
   },
   "lint-staged": {
     "src/**/*.ts": "eslint --cache --fix"
+  },
+  "engines": {
+    "node": "16"
   }
 }

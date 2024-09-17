@@ -13,7 +13,8 @@ export const copyBaraSky = (
     prTransformations: string
 ) => {
     // Support https://github.com/google/copybara/issues/297#issuecomment-2355678027
-    const pushOriginFiles = pushInclude.map((glob, i) => `glob(["${glob}"]${pushExclude[i] ? `, exclude = ["${pushExclude[i]}"]` : ""})`);
+    const pushOriginFiles = pushInclude.map((glob, i) => `glob(["${glob}"]${pushExclude[i] ? `, exclude = ["${pushExclude[i]}"]` : ""})`).join(" + ");
+    console.log({pushOriginFiles})
 
     return `
 # Variables
@@ -46,7 +47,7 @@ core.workflow(
         push = DESTINATION_BRANCH,
     ),
     # origin_files = glob(PUSH_INCLUDE, exclude = PUSH_EXCLUDE),
-    origin_files = ${pushOriginFiles.join(" + ")},
+    origin_files = ${pushOriginFiles},
     authoring = authoring.pass_thru(default = COMMITTER),
     mode = "ITERATIVE",
     transformations = [
@@ -68,7 +69,7 @@ core.workflow(
         integrates = [],
     ),
     # destination_files = glob(PUSH_INCLUDE, exclude = PUSH_EXCLUDE),
-    destination_files = ${pushOriginFiles.join(" + ")},
+    destination_files = ${pushOriginFiles},
     origin_files = glob(PR_INCLUDE if PR_INCLUDE else ["**"], exclude = PR_EXCLUDE),
     authoring = authoring.pass_thru(default = COMMITTER),
     mode = "CHANGE_REQUEST",
