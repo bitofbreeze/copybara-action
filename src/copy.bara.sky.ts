@@ -13,10 +13,12 @@ export const copyBaraSky = (
     prTransformations: string
 ) => {
     // Support https://github.com/google/copybara/issues/297#issuecomment-2355678027
-    const pushOriginFiles = pushInclude.map((glob, i) => `glob(["${glob}"]${pushExclude[i] ? `, exclude = ["${pushExclude[i]}"]` : ""})`).join(" + ");
-    console.log({pushOriginFiles})
+    const pushOriginFiles = pushInclude.map((glob, i) => `glob(['${glob}']${pushExclude[i] ? `, exclude = ['${pushExclude[i]}']` : ""})`).join(" + ");
+    
+    // origin_files = glob(PUSH_INCLUDE, exclude = PUSH_EXCLUDE),
+    // destination_files = glob(PUSH_INCLUDE, exclude = PUSH_EXCLUDE),
 
-    return `
+    const config = `
 # Variables
 SOT_REPO = "${sotRepo}"
 SOT_BRANCH = "${sotBranch}"
@@ -46,8 +48,7 @@ core.workflow(
         url = DESTINATION_REPO,
         push = DESTINATION_BRANCH,
     ),
-    # origin_files = glob(PUSH_INCLUDE, exclude = PUSH_EXCLUDE),
-    origin_files = ${pushOriginFiles},
+    origin_files = (${pushOriginFiles}),
     authoring = authoring.pass_thru(default = COMMITTER),
     mode = "ITERATIVE",
     transformations = [
@@ -68,8 +69,7 @@ core.workflow(
         destination_ref = SOT_BRANCH,
         integrates = [],
     ),
-    # destination_files = glob(PUSH_INCLUDE, exclude = PUSH_EXCLUDE),
-    destination_files = ${pushOriginFiles},
+    destination_files = (${pushOriginFiles}),
     origin_files = glob(PR_INCLUDE if PR_INCLUDE else ["**"], exclude = PR_EXCLUDE),
     authoring = authoring.pass_thru(default = COMMITTER),
     mode = "CHANGE_REQUEST",
@@ -80,4 +80,7 @@ core.workflow(
     ] + PR_TRANSFORMATIONS,
 )
 `
+console.log(config)
+
+return config;
 };
