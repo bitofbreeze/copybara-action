@@ -9903,10 +9903,10 @@ class CopyBara {
         return copy_bara_sky_1.copyBaraSky(`git@github.com:${config.sot.repo}.git`, config.sot.branch, `git@github.com:${config.destination.repo}.git`, config.destination.branch, config.committer, "file:///usr/src/app", config.push.include, config.push.exclude, 
         // this.generateInExcludes(config.push.include),
         // this.generateInExcludes(config.push.exclude),
-        this.generateTransformations(config.push.move, config.push.replace, "push"), config.pr.include, config.pr.exclude, 
-        // this.generateInExcludes(config.pr.include),
-        // this.generateInExcludes(config.pr.exclude),
-        this.generateTransformations(config.pr.move, config.pr.replace, "pr"));
+        this.generateTransformations(config.push.move, config.push.replace, "push"), 
+        // config.pr.include,
+        // config.pr.exclude,
+        this.generateInExcludes(config.pr.include), this.generateInExcludes(config.pr.exclude), this.generateTransformations(config.pr.move, config.pr.replace, "pr"));
     }
     exec(dockerParams = [], copybaraOptions = []) {
         return __awaiter(this, void 0, void 0, function* () {

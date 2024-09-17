@@ -43,10 +43,10 @@ export class CopyBara {
       // this.generateInExcludes(config.push.include),
       // this.generateInExcludes(config.push.exclude),
       this.generateTransformations(config.push.move, config.push.replace, "push"),
-      config.pr.include,
-      config.pr.exclude,
-      // this.generateInExcludes(config.pr.include),
-      // this.generateInExcludes(config.pr.exclude),
+      // config.pr.include,
+      // config.pr.exclude,
+      this.generateInExcludes(config.pr.include),
+      this.generateInExcludes(config.pr.exclude),
       this.generateTransformations(config.pr.move, config.pr.replace, "pr")
     );
   }

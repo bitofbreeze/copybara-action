@@ -8,8 +8,8 @@ export const copyBaraSky = (
     pushInclude: string[],
     pushExclude: string[],
     pushTransformations: string,
-    prInclude: string[],
-    prExclude: string[],
+    prInclude: string,
+    prExclude: string,
     prTransformations: string
 ) => {
     // Support https://github.com/google/copybara/issues/297#issuecomment-2355678027
