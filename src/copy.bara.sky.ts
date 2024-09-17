@@ -1,17 +1,21 @@
 export const copyBaraSky = (
-  sotRepo: string,
-  sotBranch: string,
-  destinationRepo: string,
-  destinationBranch: string,
-  committer: string,
-  localSot: string,
-  pushInclude: string,
-  pushExclude: string,
-  pushTransformations: string,
-  prInclude: string,
-  prExclude: string,
-  prTransformations: string
-) => `
+    sotRepo: string,
+    sotBranch: string,
+    destinationRepo: string,
+    destinationBranch: string,
+    committer: string,
+    localSot: string,
+    pushInclude: string[],
+    pushExclude: string[],
+    pushTransformations: string,
+    prInclude: string[],
+    prExclude: string[],
+    prTransformations: string
+) => {
+    // Support https://github.com/google/copybara/issues/297#issuecomment-2355678027
+    const pushOriginFiles = pushInclude.map((glob, i) => `glob(["${glob}"]${pushExclude[i] ? `, exclude = ["${pushExclude[i]}"]` : ""})`);
+
+    return `
 # Variables
 SOT_REPO = "${sotRepo}"
 SOT_BRANCH = "${sotBranch}"
@@ -20,8 +24,8 @@ DESTINATION_BRANCH = "${destinationBranch}"
 COMMITTER = "${committer}"
 LOCAL_SOT = "${localSot}"
 
-PUSH_INCLUDE = [${pushInclude}]
-PUSH_EXCLUDE = [${pushExclude}]
+# PUSH_INCLUDE = [${pushInclude}]
+# PUSH_EXCLUDE = [${pushExclude}]
 PUSH_TRANSFORMATIONS = [${pushTransformations}
 ]
 
@@ -41,7 +45,8 @@ core.workflow(
         url = DESTINATION_REPO,
         push = DESTINATION_BRANCH,
     ),
-    origin_files = glob(PUSH_INCLUDE, exclude = PUSH_EXCLUDE),
+    # origin_files = glob(PUSH_INCLUDE, exclude = PUSH_EXCLUDE),
+    origin_files = ${pushOriginFiles.join(" + ")},
     authoring = authoring.pass_thru(default = COMMITTER),
     mode = "ITERATIVE",
     transformations = [
@@ -62,7 +67,8 @@ core.workflow(
         destination_ref = SOT_BRANCH,
         integrates = [],
     ),
-    destination_files = glob(PUSH_INCLUDE, exclude = PUSH_EXCLUDE),
+    # destination_files = glob(PUSH_INCLUDE, exclude = PUSH_EXCLUDE),
+    destination_files = ${pushOriginFiles.join(" + ")},
     origin_files = glob(PR_INCLUDE if PR_INCLUDE else ["**"], exclude = PR_EXCLUDE),
     authoring = authoring.pass_thru(default = COMMITTER),
     mode = "CHANGE_REQUEST",
@@ -72,4 +78,5 @@ core.workflow(
         metadata.expose_label("GITHUB_PR_NUMBER", new_name = "Closes", separator = DESTINATION_REPO.replace("git@github.com:", " ").replace(".git", "#")),
     ] + PR_TRANSFORMATIONS,
 )
-`;
+`
+};

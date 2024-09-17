@@ -38,11 +38,15 @@ export class CopyBara {
       config.destination.branch,
       config.committer,
       "file:///usr/src/app",
-      this.generateInExcludes(config.push.include),
-      this.generateInExcludes(config.push.exclude),
+      config.push.include,
+      config.push.exclude,
+      // this.generateInExcludes(config.push.include),
+      // this.generateInExcludes(config.push.exclude),
       this.generateTransformations(config.push.move, config.push.replace, "push"),
-      this.generateInExcludes(config.pr.include),
-      this.generateInExcludes(config.pr.exclude),
+      config.pr.include,
+      config.pr.exclude,
+      // this.generateInExcludes(config.pr.include),
+      // this.generateInExcludes(config.pr.exclude),
       this.generateTransformations(config.pr.move, config.pr.replace, "pr")
     );
   }
