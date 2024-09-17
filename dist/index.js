@@ -6173,15 +6173,15 @@ const action = new copybaraAction_1.CopybaraAction({
     committer: core.getInput("committer"),
     // Push config
     push: {
-        include: core.getInput("push_include").split(" "),
-        exclude: core.getInput("push_exclude").split(" "),
+        mode: core.getInput("push_mode"),
+        files: core.getInput("push_files"),
         move: core.getInput("push_move").split(/\r?\n/),
         replace: core.getInput("push_replace").split(/\r?\n/),
     },
     // PR config
     pr: {
-        include: core.getInput("pr_include").split(" "),
-        exclude: core.getInput("pr_exclude").split(" "),
+        files: core.getInput("pr_files"),
+        mode: '',
         move: core.getInput("pr_move").split(/\r?\n/),
         replace: core.getInput("pr_replace").split(/\r?\n/),
     },
@@ -6278,13 +6278,22 @@ exports.getUserAgent = getUserAgent;
 
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.copyBaraSky = void 0;
-exports.copyBaraSky = (sotRepo, sotBranch, destinationRepo, destinationBranch, committer, localSot, pushInclude, pushExclude, pushTransformations, prInclude, prExclude, prTransformations) => {
+exports.copyBaraSky = (sotRepo, sotBranch, destinationRepo, destinationBranch, committer, localSot, 
+// pushInclude: string[],
+// pushExclude: string[],
+pushTransformations, 
+// prInclude: string,
+// prExclude: string,
+prTransformations, pushFiles, mode, prFiles) => {
     // Support https://github.com/google/copybara/issues/297#issuecomment-2355678027
-    const pushOriginFiles = pushInclude.map((glob, i) => `glob(['${glob}']${pushExclude[i] ? `, exclude = ['${pushExclude[i]}']` : ""})`).join(" + ");
+    // const pushOriginFiles = pushInclude.map((glob, i) => `glob(['${glob}']${pushExclude[i] ? `, exclude = ['${pushExclude[i]}']` : ""})`).join(" + ");
     // origin_files = glob(PUSH_INCLUDE, exclude = PUSH_EXCLUDE),
     // destination_files = glob(PUSH_INCLUDE, exclude = PUSH_EXCLUDE),
     // PUSH_INCLUDE = [${pushInclude}]
     // PUSH_EXCLUDE = [${pushExclude}]
+    // PR_INCLUDE = [${prInclude}]
+    // PR_EXCLUDE = [${prExclude}]
+    // glob(PR_INCLUDE if PR_INCLUDE else ["**"], exclude = PR_EXCLUDE)
     const config = `
 # Variables
 SOT_REPO = "${sotRepo}"
@@ -6297,8 +6306,6 @@ LOCAL_SOT = "${localSot}"
 PUSH_TRANSFORMATIONS = [${pushTransformations}
 ]
 
-PR_INCLUDE = [${prInclude}]
-PR_EXCLUDE = [${prExclude}]
 PR_TRANSFORMATIONS = [${prTransformations}
 ]
 
@@ -6313,9 +6320,9 @@ core.workflow(
         url = DESTINATION_REPO,
         push = DESTINATION_BRANCH,
     ),
-    origin_files = (${pushOriginFiles}),
+    origin_files = (${pushFiles}),
     authoring = authoring.pass_thru(default = COMMITTER),
-    mode = "ITERATIVE",
+    mode = "${mode !== null && mode !== void 0 ? mode : 'SQUASH'}",
     transformations = [
         metadata.restore_author("ORIGINAL_AUTHOR", search_all_changes = True),
         metadata.expose_label("COPYBARA_INTEGRATE_REVIEW"),
@@ -6334,8 +6341,8 @@ core.workflow(
         destination_ref = SOT_BRANCH,
         integrates = [],
     ),
-    destination_files = (${pushOriginFiles}),
-    origin_files = glob(PR_INCLUDE if PR_INCLUDE else ["**"], exclude = PR_EXCLUDE),
+    destination_files = (${pushFiles}),
+    origin_files = (${prFiles !== null && prFiles !== void 0 ? prFiles : "glob(['**'])"}),
     authoring = authoring.pass_thru(default = COMMITTER),
     mode = "CHANGE_REQUEST",
     set_rev_id = False,
@@ -9900,13 +9907,17 @@ class CopyBara {
     }
     static getConfig(workflow, config) {
         this.validateConfig(config, workflow);
-        return copy_bara_sky_1.copyBaraSky(`git@github.com:${config.sot.repo}.git`, config.sot.branch, `git@github.com:${config.destination.repo}.git`, config.destination.branch, config.committer, "file:///usr/src/app", config.push.include, config.push.exclude, 
+        return copy_bara_sky_1.copyBaraSky(`git@github.com:${config.sot.repo}.git`, config.sot.branch, `git@github.com:${config.destination.repo}.git`, config.destination.branch, config.committer, "file:///usr/src/app", 
+        // config.push.include,
+        // config.push.exclude,
         // this.generateInExcludes(config.push.include),
         // this.generateInExcludes(config.push.exclude),
         this.generateTransformations(config.push.move, config.push.replace, "push"), 
         // config.pr.include,
         // config.pr.exclude,
-        this.generateInExcludes(config.pr.include), this.generateInExcludes(config.pr.exclude), this.generateTransformations(config.pr.move, config.pr.replace, "pr"));
+        // this.generateInExcludes(config.pr.include),
+        // this.generateInExcludes(config.pr.exclude),
+        this.generateTransformations(config.pr.move, config.pr.replace, "pr"), config.push.files, config.push.mode, config.pr.files);
     }
     exec(dockerParams = [], copybaraOptions = []) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -9955,10 +9966,10 @@ class CopyBara {
             throw 'You need to set a value for "copybara_image".';
         if (!config.image.tag)
             throw 'You need to set a value for "copybara_image_tag".';
-        if (workflow == "push" && !config.push.include.length)
-            throw 'You need to set a value for "push_include".';
-        if (workflow == "pr" && !config.pr.include.length)
-            throw 'You need to set a value for "pr_include".';
+        if (workflow == "push" && !config.push.files.length)
+            throw 'You need to set a value for "push_files".';
+        if (workflow == "pr" && !config.pr.files.length)
+            throw 'You need to set a value for "pr_files".';
         if (!config.sot.repo || !config.destination.repo)
             throw 'You need to set values for "sot_repo" & "destination_repo" or set a value for "custom_config".';
     }

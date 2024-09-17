@@ -29,15 +29,15 @@ inputs:
     required: false
     default: ""
 
-  push_include:
-    description: "Files to include when pushing from SoT => Destination (space separated globs). Defaults to all files."
+  push_files:
+    description: "Files to include/exclude when pushing from SoT => Destination. Supports glob set addition/subtraction: eg, (glob(include = ['**'], exclude = ['apps/**']) + glob(include = ['apps/want/**']))"
     required: false
-    default: "**"
+    default: "glob(['**'])"
 
-  push_exclude:
-    description: "Files to exclude when pushing from SoT => Destination (space separated globs). Defaults to none."
+  push_mode:
+    description: "Workflow mode from SoT => Destination: SQUASH, ITERATIVE, CHANGE_REQUEST, CHANGE_REQUEST_FROM_SOT"
     required: false
-    default: ""
+    default: "SQUASH"
 
   push_move:
     description: "Files to move before pushing from SoT => Destination. In the format `from||to||match` where `match` is a glob filter to match only specific files within `from` (defaults to all). Separate each move operation by a line return. Defaults to reverse of `pr_move`. `push_move` is always run before `push_replace`."
@@ -49,15 +49,10 @@ inputs:
     required: false
     default: ""
 
-  pr_include:
-    description: "Files to include when pulling from Destination => SoT (space separated globs). Defaults to all files."
+  pr_files:
+    description: "Files to include/exclude when pushing from Destination => SoT. Supports glob set addition/subtraction: eg, (glob(include = ['**'], exclude = ['apps/**']) + glob(include = ['apps/want/**']))"
     required: false
-    default: "**"
-
-  pr_exclude:
-    description: "Files to exclude when pulling from Destination => SoT (space separated globs). Defaults to none."
-    required: false
-    default: ""
+    default: "glob(['**'])"
 
   pr_move:
     description: "Files to move before pushing from Destination => SoT. In the format `from||to||match` where `match` is a glob filter to match only specific files within `from` (defaults to all). Separate each move operation by a line return. Defaults to none. `pr_move` is always run after `pr_replace`."

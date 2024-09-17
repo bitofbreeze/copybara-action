@@ -5,20 +5,26 @@ export const copyBaraSky = (
     destinationBranch: string,
     committer: string,
     localSot: string,
-    pushInclude: string[],
-    pushExclude: string[],
+    // pushInclude: string[],
+    // pushExclude: string[],
     pushTransformations: string,
-    prInclude: string,
-    prExclude: string,
-    prTransformations: string
+    // prInclude: string,
+    // prExclude: string,
+    prTransformations: string,
+    pushFiles: string,
+    mode: string,
+    prFiles: string,
 ) => {
     // Support https://github.com/google/copybara/issues/297#issuecomment-2355678027
-    const pushOriginFiles = pushInclude.map((glob, i) => `glob(['${glob}']${pushExclude[i] ? `, exclude = ['${pushExclude[i]}']` : ""})`).join(" + ");
+    // const pushOriginFiles = pushInclude.map((glob, i) => `glob(['${glob}']${pushExclude[i] ? `, exclude = ['${pushExclude[i]}']` : ""})`).join(" + ");
 
     // origin_files = glob(PUSH_INCLUDE, exclude = PUSH_EXCLUDE),
     // destination_files = glob(PUSH_INCLUDE, exclude = PUSH_EXCLUDE),
     // PUSH_INCLUDE = [${pushInclude}]
     // PUSH_EXCLUDE = [${pushExclude}]
+    // PR_INCLUDE = [${prInclude}]
+    // PR_EXCLUDE = [${prExclude}]
+    // glob(PR_INCLUDE if PR_INCLUDE else ["**"], exclude = PR_EXCLUDE)
 
     const config = `
 # Variables
@@ -32,8 +38,6 @@ LOCAL_SOT = "${localSot}"
 PUSH_TRANSFORMATIONS = [${pushTransformations}
 ]
 
-PR_INCLUDE = [${prInclude}]
-PR_EXCLUDE = [${prExclude}]
 PR_TRANSFORMATIONS = [${prTransformations}
 ]
 
@@ -48,9 +52,9 @@ core.workflow(
         url = DESTINATION_REPO,
         push = DESTINATION_BRANCH,
     ),
-    origin_files = (${pushOriginFiles}),
+    origin_files = (${pushFiles}),
     authoring = authoring.pass_thru(default = COMMITTER),
-    mode = "ITERATIVE",
+    mode = "${mode ?? 'SQUASH'}",
     transformations = [
         metadata.restore_author("ORIGINAL_AUTHOR", search_all_changes = True),
         metadata.expose_label("COPYBARA_INTEGRATE_REVIEW"),
@@ -69,8 +73,8 @@ core.workflow(
         destination_ref = SOT_BRANCH,
         integrates = [],
     ),
-    destination_files = (${pushOriginFiles}),
-    origin_files = glob(PR_INCLUDE if PR_INCLUDE else ["**"], exclude = PR_EXCLUDE),
+    destination_files = (${pushFiles}),
+    origin_files = (${prFiles ?? "glob(['**'])"}),
     authoring = authoring.pass_thru(default = COMMITTER),
     mode = "CHANGE_REQUEST",
     set_rev_id = False,

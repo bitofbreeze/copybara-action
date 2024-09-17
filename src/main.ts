@@ -20,16 +20,16 @@ const action = new CopybaraAction({
 
   // Push config
   push: {
-    include: core.getInput("push_include").split(" "),
-    exclude: core.getInput("push_exclude").split(" "),
+    mode: core.getInput("push_mode"),
+    files: core.getInput("push_files"),
     move: core.getInput("push_move").split(/\r?\n/),
     replace: core.getInput("push_replace").split(/\r?\n/),
   },
 
   // PR config
   pr: {
-    include: core.getInput("pr_include").split(" "),
-    exclude: core.getInput("pr_exclude").split(" "),
+    files: core.getInput("pr_files"),
+    mode: '',
     move: core.getInput("pr_move").split(/\r?\n/),
     replace: core.getInput("pr_replace").split(/\r?\n/),
   },

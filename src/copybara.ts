@@ -38,16 +38,19 @@ export class CopyBara {
       config.destination.branch,
       config.committer,
       "file:///usr/src/app",
-      config.push.include,
-      config.push.exclude,
+      // config.push.include,
+      // config.push.exclude,
       // this.generateInExcludes(config.push.include),
       // this.generateInExcludes(config.push.exclude),
       this.generateTransformations(config.push.move, config.push.replace, "push"),
       // config.pr.include,
       // config.pr.exclude,
-      this.generateInExcludes(config.pr.include),
-      this.generateInExcludes(config.pr.exclude),
-      this.generateTransformations(config.pr.move, config.pr.replace, "pr")
+      // this.generateInExcludes(config.pr.include),
+      // this.generateInExcludes(config.pr.exclude),
+      this.generateTransformations(config.pr.move, config.pr.replace, "pr"),
+      config.push.files,
+      config.push.mode,
+      config.pr.files,
     );
   }
 
@@ -98,8 +101,8 @@ export class CopyBara {
     if (!config.committer) throw 'You need to set a value for "committer".';
     if (!config.image.name) throw 'You need to set a value for "copybara_image".';
     if (!config.image.tag) throw 'You need to set a value for "copybara_image_tag".';
-    if (workflow == "push" && !config.push.include.length) throw 'You need to set a value for "push_include".';
-    if (workflow == "pr" && !config.pr.include.length) throw 'You need to set a value for "pr_include".';
+    if (workflow == "push" && !config.push.files.length) throw 'You need to set a value for "push_files".';
+    if (workflow == "pr" && !config.pr.files.length) throw 'You need to set a value for "pr_files".';
     if (!config.sot.repo || !config.destination.repo)
       throw 'You need to set values for "sot_repo" & "destination_repo" or set a value for "custom_config".';
   }
@@ -173,8 +176,8 @@ export type DockerConfig = {
 };
 
 export type WorkflowConfig = {
-  include: string[];
-  exclude: string[];
+  files: string;
+  mode: string;
   move: string[];
   replace: string[];
 };
